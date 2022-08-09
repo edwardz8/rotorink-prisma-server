@@ -39,7 +39,7 @@ async function commitToDb(promise) {
 }
 
 // Register your application as a normal plugin.
-// app.register(import("../server"));
+app.register(import("../server"));
 
 export default async (req, res) => {
     await app.ready();
