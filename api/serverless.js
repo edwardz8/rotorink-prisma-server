@@ -1,10 +1,15 @@
 "use strict";
 
+
 import * as dotenv from "dotenv";
 dotenv.config();
 
 // Require the framework
 import Fastify from "fastify";
+import cors from '@fastify/cors'
+import sensible from '@fastify/sensible'
+
+import { PrismaClient } from '@prisma/client'
 
 // Instantiate Fastify with some config
 const app = Fastify({
