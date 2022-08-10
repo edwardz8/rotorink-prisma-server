@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -46,10 +44,10 @@ model Player {
 }
 
 model Like {
-  player   Player @relation(fields: [playerId], references: [id])
   playerId String
-  user     User   @relation(fields: [userId], references: [id])
   userId   String
+  player   Player @relation(fields: [playerId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
 
   @@id([userId, playerId])
 }
@@ -59,11 +57,11 @@ model Comment {
   message   String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId  String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  parent    Comment?  @relation("ParentChild", fields: [parentId], references: [id])
-  children  Comment[] @relation("ParentChild")
   parentId  String?
+  parent    Comment?  @relation("ParentChild", fields: [parentId], references: [id])
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children  Comment[] @relation("ParentChild")
 }
