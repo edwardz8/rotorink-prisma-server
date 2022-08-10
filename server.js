@@ -1,11 +1,11 @@
 import fastify from 'fastify'
-import dotenv from 'dotenv'
+import * as dotenv from "dotenv";
 import cors from '@fastify/cors'
 import sensible from '@fastify/sensible'
 
-import { PrismaClient } from '@prisma/client'
-
 dotenv.config()
+
+import { PrismaClient } from '@prisma/client'
 
 const app = fastify()
 app.register(sensible)
