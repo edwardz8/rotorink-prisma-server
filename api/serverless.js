@@ -51,6 +51,7 @@ const COMMENT_SELECT_FIELDS = {
     }
 }
 
+/* get all players */
 app.get('/players', async (req, res) => {
    return await commitToDb(prisma.player.findMany({ select: {
         id: true,
@@ -64,6 +65,7 @@ app.get('/players', async (req, res) => {
  }))
 })
 
+/* get single player */
 app.get('/players/:id', async (req, res) => {
     return await commitToDb(
         prisma.player.findUnique({
@@ -81,8 +83,15 @@ app.get('/players/:id', async (req, res) => {
                 },
                 select: {
                     ...COMMENT_SELECT_FIELDS,
-                    _count: { select: { likes: true } }
                 }
+             },
+             likes: {
+              orderBy: {
+                userId: 'desc'
+              },
+              select: {
+                _count: { select: { likes: true } }
+              }
              }
             }
         })
