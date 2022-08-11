@@ -27,37 +27,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv = __importStar(require("dotenv"));
-dotenv.config();
-// Require the framework
-const fastify_1 = __importDefault(require("fastify"));
-const cors_1 = __importDefault(require("@fastify/cors"));
 const sensible_1 = __importDefault(require("@fastify/sensible"));
+const cors_1 = __importDefault(require("@fastify/cors"));
+const fastify_1 = __importDefault(require("fastify"));
+const helmet_1 = __importDefault(require("@fastify/helmet"));
+const utils_1 = require("../helpers/utils");
+const routes_1 = require("../routes");
+dotenv.config();
 const client_1 = require("@prisma/client");
-// Instantiate Fastify with some config
 const app = (0, fastify_1.default)({
-    logger: true,
+    logger: { level: (0, utils_1.isDev)() ? 'info' : 'warn' },
 });
 app.register(sensible_1.default);
-// app.register(cookie, { secret: process.env.COOKIE_SECRET })
-app.register(cors_1.default, {
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-});
-/* middleware */
-/* app.addHook('onRequest', (req, res, done) => {
-    if (req.cookies.userId !== CURRENT_USER_ID) {
-        req.cookies.userId = CURRENT_USER_ID
-        res.clearCookie("userId")
-        res.setCookie("userId", CURRENT_USER_ID)
-    }
-    done()
-})
- */
+app.register(helmet_1.default);
+app.register(cors_1.default, { credentials: true, origin: utils_1.envs.CORS_HOST });
+app.register(routes_1.router);
 const prisma = new client_1.PrismaClient();
-/* const CURRENT_USER_ID = (
-    await prisma.user.findFirst({ where: { name: "" } })
-).id  */
-const COMMENT_SELECT_FIELDS = {
+app.get('/', (req, reply) => {
+    reply.send({ hello: 'from rotorink index route' });
+});
+/* const COMMENT_SELECT_FIELDS = {
     id: true,
     message: true,
     parentId: true,
@@ -68,149 +57,120 @@ const COMMENT_SELECT_FIELDS = {
             name: true,
         }
     }
-};
+} */
 /* get all players */
-app.get('/players', async (req, res) => {
-    return await commitToDb(prisma.player.findMany({ select: {
-            id: true,
-            name: true,
-            team: true,
-            goals: true,
-            assists: true,
-            content: true,
-            fanpoints: true
-        }
-    }));
-});
-/* get single player */
-app.get('/players/:id', async (req, res) => {
-    return await commitToDb(prisma.player.findUnique({
-        select: {
-            id: true,
-            name: true,
-            team: true,
-            goals: true,
-            assists: true,
-            content: true,
-            fanpoints: true,
-            comments: {
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                select: {
-                    ...COMMENT_SELECT_FIELDS,
-                }
-            },
-            likes: {
-                orderBy: {
-                    userId: 'desc'
-                },
-                select: {
-                    _count: { select: { likes: true } }
-                }
-            }
-        }
-    })
-        .then(async (player) => {
-        const likes = await prisma.like.findMany({
-            where: {
-                userId: req.cookies.userId,
-                commentId: { in: player.comments.map(comment => comment.id) }
-            }
-        });
-        return {
-            ...player,
-            comments: player.comments.map(comment => {
-                const { _count, ...commentFields } = comment;
-                return {
-                    ...commentFields,
-                    likedByMe: likes.find(like => like.commentId === comment.id),
-                    likeCount: _count.likes
-                };
-            })
-        };
-    }));
-});
+/* app.get('/players', async (req, res) => {
+   return await commitToDb(prisma.player.findMany({ select: {
+        id: true,
+        name: true,
+        team: true,
+        goals: true,
+        assists: true,
+        content: true,
+        fanpoints: true
+    }
+ }))
+}) */
 /* comments on a player */
-app.post("/players/:id/comments", async (req, res) => {
+/* app.post("/players/:id/comments", async (req, res) => {
     if (req.body.message === "" || req.body.message == null) {
-        return res.send(app.httpErrors.badRequest("Message is required"));
+        return res.send(app.httpErrors.badRequest("Message is required"))
     }
-    return await commitToDb(prisma.comment.create({
-        data: {
-            message: req.body.message,
-            userId: req.cookies.userId,
-            parentId: req.body.parentId,
-            playerId: req.params.id
-        },
-        select: COMMENT_SELECT_FIELDS
-    })
+
+    return await commitToDb(
+        prisma.comment.create({
+            data: {
+                message: req.body.message,
+                userId: req.cookies.userId,
+                parentId: req.body.parentId,
+                playerId: req.params.id
+            },
+            select: COMMENT_SELECT_FIELDS
+        })
         .then(comment => {
-        return {
-            ...comment,
-            likeCount: 0,
-            likedByMe: false
-        };
-    }));
-});
+            return {
+                ...comment,
+                likeCount: 0,
+                likedByMe: false
+            }
+        })
+    )
+}) */
 /* individual comment on a player */
-app.put("/players/:playerId/comments/:commentId", async (req, res) => {
+/* app.put("/players/:playerId/comments/:commentId", async (req, res) => {
     if (req.body.message === "" || req.body.message == null) {
-        return res.send(app.httpErrors.badRequest("Message is required"));
+      return res.send(app.httpErrors.badRequest("Message is required"))
     }
+  
     const { userId } = await prisma.comment.findUnique({
-        where: { id: req.params.commentId },
-        select: { userId: true },
-    });
+      where: { id: req.params.commentId },
+      select: { userId: true },
+    })
     if (userId !== req.cookies.userId) {
-        return res.send(app.httpErrors.unauthorized("You do not have permission to edit this message"));
+      return res.send(
+        app.httpErrors.unauthorized(
+          "You do not have permission to edit this message"
+        )
+      )
     }
-    return await commitToDb(prisma.comment.update({
+  
+    return await commitToDb(
+      prisma.comment.update({
         where: { id: req.params.commentId },
         data: { message: req.body.message },
         select: { message: true },
-    }));
-});
+      })
+    )
+  }) */
 /* delete comment from a player */
-app.delete("/players/:playerId/comments/:commentId", async (req, res) => {
+/*   app.delete("/players/:playerId/comments/:commentId", async (req, res) => {
     const { userId } = await prisma.comment.findUnique({
-        where: { id: req.params.commentId },
-        select: { userId: true },
-    });
+      where: { id: req.params.commentId },
+      select: { userId: true },
+    })
     if (userId !== req.cookies.userId) {
-        return res.send(app.httpErrors.unauthorized("You do not have permission to delete this message"));
+      return res.send(
+        app.httpErrors.unauthorized(
+          "You do not have permission to delete this message"
+        )
+      )
     }
-    return await commitToDb(prisma.comment.delete({
+  
+    return await commitToDb(
+      prisma.comment.delete({
         where: { id: req.params.commentId },
         select: { id: true },
-    }));
-});
+      })
+    )
+  }) */
 /* like and unlike player */
-app.post("/players/:playerId/comments/:commentId/toggleLike", async (req, res) => {
+/*   app.post("/players/:playerId/comments/:commentId/toggleLike", async (req, res) => {
     const data = {
-        commentId: req.params.commentId,
-        userId: req.cookies.userId,
-    };
+      commentId: req.params.commentId,
+      userId: req.cookies.userId,
+    }
+  
     const like = await prisma.like.findUnique({
-        where: { userId_commentId: data },
-    });
+      where: { userId_commentId: data },
+    })
+  
     if (like == null) {
-        return await commitToDb(prisma.like.create({ data })).then(() => {
-            return { addLike: true };
-        });
+      return await commitToDb(prisma.like.create({ data })).then(() => {
+        return { addLike: true }
+      })
+    } else {
+      return await commitToDb(
+        prisma.like.delete({ where: { userId_commentId: data } })
+      ).then(() => {
+        return { addLike: false }
+      })
     }
-    else {
-        return await commitToDb(prisma.like.delete({ where: { userId_commentId: data } })).then(() => {
-            return { addLike: false };
-        });
-    }
-});
-async function commitToDb(promise) {
-    const [error, data] = await app.to(promise);
-    if (error)
-        return app.httpErrors.internalServerError(error.message);
-    return data;
-}
+  }) */
+/* async function commitToDb(promise) {
+   const [error, data] = await app.to(promise)
+   if (error) return app.httpErrors.internalServerError(error.message)
+   return data
+} */
 // Register your application as a normal plugin.
 // app.register(import("../server"));
 exports.default = async (req, res) => {

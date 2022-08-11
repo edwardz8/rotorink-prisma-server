@@ -26,6 +26,7 @@
     "@fastify/aws-lambda": "^3.1.1",
     "@fastify/cookie": "^7.3.1",
     "@fastify/cors": "^8.1.0",
+    "@fastify/helmet": "^9.1.0",
     "@fastify/sensible": "^5.1.0",
     "@prisma/client": "^4.2.0",
     "bcrypt": "^5.0.1",

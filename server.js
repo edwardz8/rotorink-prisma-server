@@ -1,4 +1,4 @@
-import fastify from 'fastify'
+/* import fastify from 'fastify'
 import * as dotenv from "dotenv";
 import cors from '@fastify/cors'
 import sensible from '@fastify/sensible'
@@ -36,4 +36,4 @@ async function commitToDb(promise) {
 }
 
 
-app.listen({ port: process.env.PORT || 8081 })
+app.listen({ port: process.env.PORT || 8081 }) */

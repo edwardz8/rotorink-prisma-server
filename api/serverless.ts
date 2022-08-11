@@ -1,44 +1,34 @@
 "use strict";
 
 import * as dotenv from "dotenv";
-dotenv.config();
-
-// Require the framework
-import Fastify from "fastify";
-import cors from '@fastify/cors'
-import cookie from '@fastify/cookie'
 import sensible from '@fastify/sensible'
+import cors from '@fastify/cors';
+import fastify, { FastifyInstance } from 'fastify';
+import helmet from '@fastify/helmet'
+import { isDev, envs } from '../helpers/utils'
+import { router } from '../routes'
+
+dotenv.config()
 
 import { PrismaClient } from '@prisma/client'
 
-// Instantiate Fastify with some config
-const app = Fastify({
-  logger: true,
-});
+const app: FastifyInstance = fastify({
+    logger: { level: isDev() ? 'info' : 'warn' },
+})
 
 app.register(sensible)
-// app.register(cookie, { secret: process.env.COOKIE_SECRET })
-app.register(cors, {
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-})
-/* middleware */
-/* app.addHook('onRequest', (req, res, done) => {
-    if (req.cookies.userId !== CURRENT_USER_ID) {
-        req.cookies.userId = CURRENT_USER_ID
-        res.clearCookie("userId")
-        res.setCookie("userId", CURRENT_USER_ID)
-    }
-    done()
-})
- */
+app.register(helmet)
+app.register(cors, { credentials: true, origin: envs.CORS_HOST })
+app.register(router)
+
 const prisma = new PrismaClient()
 
-/* const CURRENT_USER_ID = (
-    await prisma.user.findFirst({ where: { name: "" } })
-).id  */
+app.get('/', (req, reply) => {
+    reply.send({ hello: 'from rotorink index route' })
+})
 
-const COMMENT_SELECT_FIELDS = {
+
+/* const COMMENT_SELECT_FIELDS = {
     id: true,
     message: true,
     parentId: true, 
@@ -49,10 +39,10 @@ const COMMENT_SELECT_FIELDS = {
             name: true, 
         }
     }
-}
+} */
 
 /* get all players */
-app.get('/players', async (req, res) => {
+/* app.get('/players', async (req, res) => {
    return await commitToDb(prisma.player.findMany({ select: {
         id: true,
         name: true,
@@ -63,63 +53,11 @@ app.get('/players', async (req, res) => {
         fanpoints: true 
     }
  }))
-})
+}) */
 
-/* get single player */
-app.get('/players/:id', async (req, res) => {
-    return await commitToDb(
-        prisma.player.findUnique({
-            select: {
-                id: true,
-                name: true,
-                team: true, 
-                goals: true, 
-                assists: true,
-                content: true,
-                fanpoints: true,
-            comments: {
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                select: {
-                    ...COMMENT_SELECT_FIELDS,
-                }
-             },
-           /*   likes: {
-              orderBy: {
-                userId: 'desc'
-              },
-              select: {
-                _count: { select: { likes: true } }
-              }
-             } */
-            }
-        })
-        .then(async player => {
-            const likes = await prisma.like.findMany({
-                where: {
-                    userId: req.cookies.userId,
-                    commentId: { in: player.comments.map(comment => comment.id) }
-                }
-            })
-
-        return {
-            ...player,
-            comments: player.comments.map(comment => {
-                const { _count, ...commentFields } = comment 
-                return {
-                    ...commentFields,
-                    likedByMe: likes.find(like => like.commentId === comment.id),
-                    likeCount: _count.likes 
-                }
-            })
-          }
-        })
-    )
-})
 
 /* comments on a player */
-app.post("/players/:id/comments", async (req, res) => {
+/* app.post("/players/:id/comments", async (req, res) => {
     if (req.body.message === "" || req.body.message == null) {
         return res.send(app.httpErrors.badRequest("Message is required"))
     }
@@ -142,10 +80,10 @@ app.post("/players/:id/comments", async (req, res) => {
             }
         })
     )
-})
+}) */
 
 /* individual comment on a player */
-app.put("/players/:playerId/comments/:commentId", async (req, res) => {
+/* app.put("/players/:playerId/comments/:commentId", async (req, res) => {
     if (req.body.message === "" || req.body.message == null) {
       return res.send(app.httpErrors.badRequest("Message is required"))
     }
@@ -169,10 +107,10 @@ app.put("/players/:playerId/comments/:commentId", async (req, res) => {
         select: { message: true },
       })
     )
-  })
+  }) */
   
   /* delete comment from a player */
-  app.delete("/players/:playerId/comments/:commentId", async (req, res) => {
+/*   app.delete("/players/:playerId/comments/:commentId", async (req, res) => {
     const { userId } = await prisma.comment.findUnique({
       where: { id: req.params.commentId },
       select: { userId: true },
@@ -191,10 +129,10 @@ app.put("/players/:playerId/comments/:commentId", async (req, res) => {
         select: { id: true },
       })
     )
-  })
+  }) */
   
   /* like and unlike player */
-  app.post("/players/:playerId/comments/:commentId/toggleLike", async (req, res) => {
+/*   app.post("/players/:playerId/comments/:commentId/toggleLike", async (req, res) => {
     const data = {
       commentId: req.params.commentId,
       userId: req.cookies.userId,
@@ -215,15 +153,15 @@ app.put("/players/:playerId/comments/:commentId", async (req, res) => {
         return { addLike: false }
       })
     }
-  })
+  }) */
 
 
 
-async function commitToDb(promise) {
+/* async function commitToDb(promise) {
    const [error, data] = await app.to(promise)
    if (error) return app.httpErrors.internalServerError(error.message)
    return data 
-}
+} */
 
 // Register your application as a normal plugin.
 // app.register(import("../server"));
