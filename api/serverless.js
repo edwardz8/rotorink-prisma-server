@@ -17,13 +17,13 @@ const app = Fastify({
 });
 
 app.register(sensible)
-app.register(cookie, { secret: process.env.COOKIE_SECRET })
+// app.register(cookie, { secret: process.env.COOKIE_SECRET })
 app.register(cors, {
     origin: process.env.CLIENT_URL,
     credentials: true,
 })
 /* middleware */
-app.addHook('onRequest', (req, res, done) => {
+/* app.addHook('onRequest', (req, res, done) => {
     if (req.cookies.userId !== CURRENT_USER_ID) {
         req.cookies.userId = CURRENT_USER_ID
         res.clearCookie("userId")
@@ -31,12 +31,12 @@ app.addHook('onRequest', (req, res, done) => {
     }
     done()
 })
-
+ */
 const prisma = new PrismaClient()
 
-const CURRENT_USER_ID = (
+/* const CURRENT_USER_ID = (
     await prisma.user.findFirst({ where: { name: "" } })
-).id 
+).id  */
 
 const COMMENT_SELECT_FIELDS = {
     id: true,
