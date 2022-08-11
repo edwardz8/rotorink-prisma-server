@@ -1,4 +1,4 @@
-/* import fastify from 'fastify'
+import fastify from 'fastify'
 import * as dotenv from "dotenv";
 import cors from '@fastify/cors'
 import sensible from '@fastify/sensible'
@@ -17,7 +17,7 @@ app.register(cors, {
 
 const prisma = new PrismaClient()
 
-app.get('/players', async (req, res) => {
+/* app.get('/players', async (req, res) => {
    return await commitToDb(prisma.player.findMany({ select: {
         id: true,
         name: true,
@@ -27,7 +27,7 @@ app.get('/players', async (req, res) => {
         fanpoints: true 
     }
  }))
-})
+}) */
 
 async function commitToDb(promise) {
    const [error, data] = await app.to(promise)
@@ -36,4 +36,4 @@ async function commitToDb(promise) {
 }
 
 
-app.listen({ port: process.env.PORT || 8081 }) */
+app.listen({ port: process.env.PORT || 8081 })
