@@ -85,14 +85,14 @@ app.get('/players/:id', async (req, res) => {
                     ...COMMENT_SELECT_FIELDS,
                 }
              },
-             likes: {
+           /*   likes: {
               orderBy: {
                 userId: 'desc'
               },
               select: {
                 _count: { select: { likes: true } }
               }
-             }
+             } */
             }
         })
         .then(async player => {

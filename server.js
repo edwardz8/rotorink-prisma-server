@@ -8,6 +8,7 @@ dotenv.config()
 import { PrismaClient } from '@prisma/client'
 
 const app = fastify()
+
 app.register(sensible)
 app.register(cors, {
     origin: process.env.CLIENT_URL,
